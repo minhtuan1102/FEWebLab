@@ -1,7 +1,7 @@
 import fetchModel from "../lib/fetchModelData";
 
 const models = {
-  schemaInfo: () => fetchModel("/test/info"),
+  schemaInfo: () => fetchModel("/test/info" ),
   userListModel: () => fetchModel("/user/list"),
   userModel: (userId) => fetchModel(`/user/${userId}`),
   photoOfUserModel: (userId) => fetchModel(`/photosOfUser/${userId}`),

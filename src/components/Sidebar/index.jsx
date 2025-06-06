@@ -8,7 +8,6 @@ const Layout = ({ children }) => {
       <aside className="layout-sidebar">
         <UserList showBadges={true} />
       </aside>
-
       <main className="layout-main">{children}</main>
     </div>
   );

@@ -9,18 +9,15 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useParams} from "react-router-dom";
 import models from "../../modelData/models";
-import PhotoStepper from "../PhotoStepper";
 import "./styles.css";
 import { useAuth } from "../../context/AuthContext";
 
 function UserPhotos() {
-  const { userId, photoId } = useParams();
-  const navigate = useNavigate();
+  const { userId} = useParams();
   const [user, setUser] = useState(null);
   const [photos, setPhotos] = useState([]);
-  const [advancedFeatures, setAdvancedFeatures] = useState(false);
   const [commentTexts, setCommentTexts] = useState({});
   const { currentUser } = useAuth();
 
@@ -71,12 +68,6 @@ function UserPhotos() {
     }
   };
 
-  useEffect(() => {
-    const storedValue =
-      localStorage.getItem("advancedFeaturesEnabled") || "false";
-    setAdvancedFeatures(storedValue === "true");
-  }, []);
-
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleString("en-US", {
       year: "numeric",
@@ -87,24 +78,10 @@ function UserPhotos() {
     });
   };
 
-  const handlePhotoClick = (photoId) => {
-    if (advancedFeatures) {
-      navigate(`/photos/${userId}/${photoId}`);
-    }
-  };
-
   if (!user || !photos.length) {
     return <Typography variant="h4">Loading photos...</Typography>;
   }
 
-  if (advancedFeatures && photoId) {
-    return <PhotoStepper user={user} photos={photos} />;
-  }
-
-  if (advancedFeatures && !photoId) {
-    navigate(`/photos/${userId}/${photos[0]._id}`, { replace: true });
-    return null;
-  }
 
   const BACKEND_URL = "http://localhost:8081";
 
@@ -112,9 +89,6 @@ function UserPhotos() {
     <div className="photo-container">
       {photos.map((photo) => (
         <Card
-          key={photo._id}
-          className={`photo-card ${advancedFeatures ? "clickable" : ""}`}
-          onClick={() => advancedFeatures && handlePhotoClick(photo._id)}
         >
           <CardMedia
             component="img"

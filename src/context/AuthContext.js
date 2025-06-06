@@ -46,7 +46,6 @@ export function AuthProvider({ children }) {
             const user = await models.userModel(userId);
             if (user) {
                 setCurrentUser(user);
-                localStorage.setItem("advancedFeaturesEnabled", false);
                 localStorage.setItem('user', JSON.stringify(user));
                 return true;
             }

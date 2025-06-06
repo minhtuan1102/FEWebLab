@@ -57,6 +57,15 @@ function UserDetail() {
         >
           View Photos
         </Button>
+        <Button
+          variant="contained"
+          component={Link}
+          to={`/users/${user._id}/edit`}
+          color="primary"
+          className="edit-button"
+        >
+          Edit Profile
+        </Button>
       </CardContent>
     </Card>
   );

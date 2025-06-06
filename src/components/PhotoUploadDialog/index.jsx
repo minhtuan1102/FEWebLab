@@ -10,23 +10,19 @@ import {
   LinearProgress,
   Alert,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import models from "../../modelData/models";
 import "./styles.css";
-import { useNavigate } from "react-router-dom";
 
 function PhotoUploadDialog({
   open,
   onClose,
   onSuccess,
   userId,
-  advancedFeatures,
 }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -84,7 +80,6 @@ function PhotoUploadDialog({
             style={{ display: "none" }}
             onChange={handleFileSelect}
           />
-          <CloudUploadIcon className="upload-icon" />
           <Typography>
             {selectedFile ? selectedFile.name : "Click or drag to upload photo"}
           </Typography>
