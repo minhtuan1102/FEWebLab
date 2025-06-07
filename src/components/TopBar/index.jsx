@@ -1,118 +1,80 @@
-import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
-import PhotoUploadDialog from "../PhotoUploadDialog";
-import models from "../../modelData/models";
-import { useAuth } from "../../context/AuthContext";
+import React, { useEffect, useState} from "react";
+import { AppBar, Toolbar, Typography} from "@mui/material";
+import { useLocation, useParams, Link} from "react-router-dom";
 import "./styles.css";
+import axios from "../axios";
+import Button from "react-bootstrap/Button";
+import useStyles from "./styles";
+
 
 function TopBar() {
+  const classes = useStyles();
+  const [appContext, setAppContext] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [userId, setUserId] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
-  const [contextText, setContextText] = useState("");
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   useEffect(() => {
-    async function fetchUser() {
-      if (!currentUser) {
-        setContextText("Please Login");
-        return;
-      }
+    const fetchUser = async () => {
+      try {
+        const id = location.pathname.slice(7);
+        const response = await axios.get(`http://localhost:5000/api/user/${id}`);
+        const user = response.data;
+        const fullname = user.last_name;
 
-      const pathParts = location.pathname.split("/").filter(Boolean);
-
-      if (
-        (pathParts[0] === "users" || pathParts[0] === "photos") &&
-        pathParts.length === 2
-      ) {
-        const userId = pathParts[1];
-        try {
-          const user = await models.userModel(userId);
-          if (user) {
-            const fullName = `${user.first_name} ${user.last_name}`;
-            if (pathParts[0] === "photos") {
-              setContextText(
-                user._id === currentUser._id
-                  ? "My Photos"
-                  : `Photos of ${fullName}`
-              );
-            } else {
-              setContextText(
-                user._id === currentUser._id ? "My Profile" : fullName
-              );
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          setContextText("");
+        if (location.pathname.includes("/users/")) {
+          setAppContext(`Information of User ${fullname}`);
+        } else if (location.pathname.includes("/photos")) {
+          setAppContext(`Photos of User ${fullname}`);
+        } else {
+          setAppContext("");
         }
-      } else {
-        setContextText(
-          currentUser ? `Hi ${currentUser.first_name}` : "Please Login"
-        );
+      } catch (err) {
+        console.error(err);
       }
-    }
-
+    };
     fetchUser();
-  }, [location, currentUser]);
+  } , [location]);
+
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem("authToken");
+    window.location.reload();
   };
   
-  const handlePhotoUploadSuccess = (uploadedPhoto) => {
-    if (uploadedPhoto && uploadedPhoto._id) {
-      // Navigate thẳng tới ảnh vừa upload
-      navigate(
-        `/photos/${uploadedPhoto.userId || currentUser._id}/${
-          uploadedPhoto._id
-        }`,
-        { replace: true }
-      );
 
-      window.location.reload();
-    } else if (currentUser && currentUser._id) {
-      navigate(`/photos/${currentUser._id}`);
-    }
-  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/auth`);
+        if (response.data.success) {
+          console.log("User info:", response.data);
+          setLastName(response.data.last_name);
+          setUserId(response.data.userId);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    fetchUser();
+  }, []);
+
 
   return (
-    <AppBar position="fixed">
-      <Toolbar className="appbar-toolbar">
-        {currentUser && (
-          <>
-            <Box className="left-controls">
-              <Typography
-                variant="body1"
-                onClick={() => navigate(`/users/${currentUser._id}`)}
-                sx={{ cursor: "pointer", textDecoration: "underline" }}
-              >
-                Hi {currentUser.first_name}
-              </Typography>
-              <Button color="inherit" onClick={() => setUploadDialogOpen(true)}>
-                Add Photo
-              </Button>
-              <Button color="inherit" onClick={handleLogout}>
-                Logout
-              </Button>
-            </Box>
-          </>
-        )}
-
-        <Typography variant="h6" component="div">
-          {contextText}
+    <AppBar className="topbar-appBar" position="absolute">
+      <Toolbar className={classes.fab1}>
+        <Typography variant="h6" color="inherit" className="app-context">
+          {appContext ? `${appContext}` : `Hi ${lastName}`}
         </Typography>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Typography variant="h6" className="user-info">
+            <Link to={`/users/${userId}`} style={{ color: "white", textDecoration: "none" }}>{lastName}</Link>
+          </Typography>
+          <Button onClick={handleLogout} variant="light" className="logout-button">
+            Log Out
+          </Button>
+        </div>
       </Toolbar>
-
-      {currentUser && (
-        <PhotoUploadDialog
-          open={uploadDialogOpen}
-          onClose={() => setUploadDialogOpen(false)}
-          onSuccess={handlePhotoUploadSuccess}
-          userId={currentUser._id}
-        />
-      )}
     </AppBar>
   );
 }

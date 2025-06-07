@@ -1,64 +1,61 @@
-import React, { useState, useEffect } from "react";
-import { Typography, Card, CardContent, Button } from "@mui/material";
-import { Link, useParams } from "react-router-dom";
-import models from "../../modelData/models";
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Typography } from "@mui/material";
+import axios from "axios";
 import "./styles.css";
-
 function UserDetail() {
-  const { userId } = useParams();
-  const [user, setUser] = useState(null);
-
+  const [User, setUser] = useState(null);
+  const { id } = useParams();
   useEffect(() => {
-    async function fetchUser() {
+    const fetchUser = async () => {
       try {
-        const data = await models.userModel(userId);
-        if (data) {
-          setUser(data);
-        } else {
-          console.error("User not found for ID:", userId);
-        }
-      } catch (err) {
-        console.error("Error fetching user:", err);
+        const response = await axios.get(
+          `http://localhost:5000/api/user/${id}`,
+        );
+        setUser(response.data);
+      } catch (error) {
+        console.error("Error fetching User:", error);
       }
-    }
+    };
 
-    if (userId) {
-      fetchUser();
-    }
-  }, [userId]);
+    fetchUser();
+  }, [id]);
 
-  if (!user) {
-    return <Typography variant="h4">Loading user...</Typography>;
+  if (!User) {
+    return <Typography variant="body1">User not found.</Typography>;
   }
 
+
   return (
-    <Card className="user-detail-card">
-      <CardContent>
-        <div className="user-detail-header">
-          <Typography variant="h4" gutterBottom>
-            {user.first_name} {user.last_name}
-          </Typography>
-          <Typography variant="h6" color="textSecondary">
-            {user.occupation}
-          </Typography>
-        </div>
-        <Typography variant="body1" className="user-detail-location">
-          Location: {user.location}
+    <div className="User-detail-container">
+      {" "}
+      {/* Added container class */}
+      <Typography variant="h6" className="detail-title">
+        User Details:
+      </Typography>{" "}
+      {/* Added class for title */}
+      <div className="detail-info">
+        {" "}
+        {/* Added class for detail info */}
+        <Typography variant="body1">
+          <strong>Name:</strong> {User.last_name}
         </Typography>
-        <Typography variant="body1" className="user-detail-description">
-          {user.description}
+        <Typography variant="body1">
+          <strong>Location:</strong> {User.location}
         </Typography>
-        <Button 
-          variant="contained" 
-          component={Link} 
-          to={`/photos/${user._id}`}
-          color="primary"
-          className="photos-button"
-        >
-          View Photos
-        </Button>
-      </CardContent>
-    </Card>
+        <Typography variant="body1">
+          <strong>Description:</strong> {User.description}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Occupation:</strong> {User.occupation}
+        </Typography>
+        <Typography variant="body1">
+          <Link to={`/photos/${id}`} className="view-photos-link">
+            View Photos
+          </Link>{" "}
+        </Typography>
+      </div>
+    </div>
   );
 }
 

@@ -1,24 +1,26 @@
-.user-list {
-    padding: 10px;
+/* UserList.css */
+
+.user-list-container {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.user-list-item {
-    transition: background-color 0.2s ease-in-out;
+.list-title {
+  margin-bottom: 10px;
 }
 
-.user-list-item:hover {
-    background-color: #f0f0f0;
+.list-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  transition: background-color 0.3s ease;
 }
 
-.user-list-badges {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
+.list-item:hover {
+  background-color: #f9f9f9;
 }
 
-.user-list-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
+.list-text {
+  color: #333;
 }
+

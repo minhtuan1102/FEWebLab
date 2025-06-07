@@ -1,162 +1,201 @@
-import React, { useState, useEffect } from "react";
-import {
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
-  Link,
-  Box,
-  TextField,
-  Button,
-} from "@mui/material";
-import { Link as RouterLink, useParams} from "react-router-dom";
-import models from "../../modelData/models";
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Typography } from "@mui/material";
+import axios from "axios";
+import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 import "./styles.css";
-import { useAuth } from "../../context/AuthContext";
+import useFetchCommentUsers from "../CustomHook/useFetchCommentUsers";
+
 
 function UserPhotos() {
-  const { userId} = useParams();
-  const [user, setUser] = useState(null);
   const [photos, setPhotos] = useState([]);
-  const [commentTexts, setCommentTexts] = useState({});
-  const { currentUser } = useAuth();
+  const [user, setUser] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [userMap, setUserMap] = useState({});
+  const [comment, setComment] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const { id } = useParams();
+  useEffect(() => {
+    const fetchPhoto = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/photo/${id}`,
+        );
+        const response2 = await axios.get(
+          `http://localhost:5000/api/user/${id}`,
+        );
+        setPhotos(response.data);
+        setUser(response2.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching photo:", error);
+        setLoading(false);
+      }
+    };
+    const interval = setInterval(() => {
+      fetchPhoto();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [id]);
 
   useEffect(() => {
-    async function fetchData() {
-      const [userData, photoData] = await Promise.all([
-        models.userModel(userId),
-        models.photoOfUserModel(userId),
-      ]);
-
-      if (userData) setUser(userData);
-      else console.error("User not found");
-
-      if (Array.isArray(photoData)) {
-        const sortedPhotos = photoData.sort(
-          (a, b) => new Date(b.date_time) - new Date(a.date_time)
-        );
-        setPhotos(sortedPhotos);
-      } else {
-        console.error("Photos not found");
-      }
+    const hash = window.location.hash;
+    if (hash) {
+      setTimeout(() => {
+        const element = document.getElementById(hash.substring(1));
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 1500);
     }
+  }, []);
 
-    fetchData();
-  }, [userId]);
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/auth`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        if (response.data.success) {
+          console.log("User ID:", response.data.userId);
+          setCurrentUserId(response.data.userId);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
-  const handleCommentChange = (photoId, value) => {
-    setCommentTexts((prev) => ({ ...prev, [photoId]: value }));
-  };
+  useFetchCommentUsers(photos, userMap, setUserMap);
 
-  const handleAddComment = async (photoId) => {
-    const text = commentTexts[photoId]?.trim();
-    if (!text) return alert("Comment cannot be empty");
+  const handleComment = async (e) => {
+    e.preventDefault();
+    const photoId = e.target.elements.photo_id.value;
+    const userId = e.target.elements.user_id.value;
 
     try {
-      const updatedPhoto = await models.addCommentToPhoto(
-        photoId,
-        text,
-        currentUser._id
+      const response = await axios.post(
+        "http://localhost:5000/api/write/comment",
+        {
+          photoId,
+          user_id: currentUserId, 
+          comment,
+        },
       );
-
-      setPhotos((prevPhotos) =>
-        prevPhotos.map((p) => (p._id === photoId ? updatedPhoto : p))
-      );
-      setCommentTexts((prev) => ({ ...prev, [photoId]: "" }));
+      setComment("");
     } catch (err) {
-      console.error("Failed to add comment:", err);
+      console.log(err);
     }
   };
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
-  if (!user || !photos.length) {
-    return <Typography variant="h4">Loading photos...</Typography>;
-  }
-
-
-  const BACKEND_URL = "http://localhost:8081";
 
   return (
-    <div className="photo-container">
-      {photos.map((photo) => (
-        <Card
-        >
-          <CardMedia
-            component="img"
-            image={`${BACKEND_URL}/images/${photo.file_name}`}
-            alt={`Photo by ${user.first_name}`}
-            className="photo-image"
-            loading="lazy"
-          />
-          <CardContent>
-            <Typography variant="body2" color="textSecondary">
-              Posted on {formatDate(photo.date_time)}
-            </Typography>
-            <div className="comment-section">
-              <Typography variant="h6" gutterBottom>
-                Comments
-              </Typography>
-              
-              {photo.comments &&
-                [...photo.comments]
-                  .sort((a, b) => new Date(b.date_time) - new Date(a.date_time))
-                  .map((comment) => (
-                    <Card key={comment._id} className="comment-card">
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        className="comment-date-user"
-                      >
-                        {formatDate(comment.date_time)} -{" "}
-                        <Link
-                          component={RouterLink}
-                          to={`/users/${comment.user._id}`}
-                          color="primary"
-                          className="comment-user-link"
-                        >
-                          {comment.user.first_name} {comment.user.last_name}
-                        </Link>
-                      </Typography>
-                      <Typography variant="body1" className="comment-text">
-                        {comment.comment}
-                      </Typography>
-                    </Card>
-                  ))}
-            </div>
+    <div className="user-photos-container">
+      <Typography variant="body1">User Photos:</Typography>
+      {loading ? (
+        <Typography variant="body1">Loading photos...</Typography>) 
+        : photos.length > 0 ? (
+          photos.map((photo, index) => {
+            if (!photo || !photo._id) {
+              console.error("Photo is undefined or missing _id at index:", index);
+              return null;
+            }
 
-            {currentUser && (
-              <Box mt={2}>
-                <TextField
-                  fullWidth
-                  multiline
-                  label="Add a comment"
-                  value={commentTexts[photo._id] || ""}
-                  onChange={(e) =>
-                    handleCommentChange(photo._id, e.target.value)
-                  }
+            return (
+              <div className="photo-item" id={photo._id} key={photo._id}>
+                <Link to={`/photos/${id}/${photo._id}`}>
+                <img
+                  src={`${photo.file_name}`}
+                  alt={`Photo ${photo._id}`}
                 />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ mt: 1 }}
-                  onClick={() => handleAddComment(photo._id)}
-                >
-                  Post
-                </Button>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              </Link>
+                {/* <img
+                  src={`${photo.file_name}`}
+                  alt={`Photo ${photo._id}`}
+                /> */}
+                <div className="photo-info">
+                  <Typography variant="body1">
+                    Date/Time:{" "}
+                    {new Date(photo.date_time).toLocaleString("vi-VN", {
+                      timeZone: "Asia/Ho_Chi_Minh",
+                      hour12: false,
+                    })}
+                  </Typography>
+                  <Typography variant="body1">Comments:</Typography>
+
+                  {photo.comments && photo.comments.length > 0 ? (
+                    photo.comments.map((comment, commentIndex) => {
+                      if (!comment || !comment._id) {
+                        console.error(
+                          "Comment is undefined or missing _id at index:",
+                          commentIndex
+                        );
+                        return null;
+                      }
+
+                      return (
+                        <div className="comment-item" key={comment._id}>
+                          <Typography variant="body1">
+                            {new Date(comment.date_time).toLocaleString("vi-VN", {
+                              timeZone: "Asia/Ho_Chi_Minh",
+                              hour12: false,
+                            })}
+                          </Typography>
+                          <Typography variant="body1" id={comment._id}>
+                            <Link to={`/users/${comment.user_id}`}>{userMap[comment.user_id]?.last_name}</Link>
+                            : {comment.comment}
+                          </Typography>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <Typography variant="body1">No comments yet.</Typography>
+                  )}
+                  <>
+                    <h3>Write your comment</h3>
+                    <Form
+                      onSubmit={handleComment}
+                      style={{ display: "flex", flexDirection: "row" }}
+                    >
+                      <div
+                        className="form-group"
+                        style={{ width: "90%", marginRight: "5px" }}
+                      >
+                        <input
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          type="text"
+                          className="form-control"
+                          placeholder="Your comment"
+                        />
+                      </div>
+                      <input type="hidden" name="photo_id" value={photo._id} />
+                      <input type="hidden" name="user_id" value={user._id} />
+
+                      <Button type="submit" variant="primary">
+                        Ok
+                      </Button>
+                    </Form>
+                  </>
+                </div>
+              </div>
+          );
+        })
+      ) : (
+        <Typography variant="body1">No photos found for this user.</Typography>
+      )}
     </div>
   );
 }

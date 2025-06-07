@@ -1,55 +1,52 @@
-.photo-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
-}
+/* styles.css */
 
-.photo-card {
-  width: 80%;
-  cursor: default;
-  transition: box-shadow 0.3s ease;
-}
-
-.photo-card.clickable {
-  cursor: pointer;
-}
-
-.photo-card.clickable:hover {
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.photo-image {
-  height: auto;
-  object-fit: cover;
-}
-
-.comment-section {
-  margin-top: 16px;
-}
-
-.comment-card {
-  margin-bottom: 12px;
-  padding: 8px;
-  background-color: #f9f9f9;
-}
-
-.comment-date-user {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #666;
-}
-
-.comment-user-link {
-  margin-left: 4px;
-  text-decoration: none;
-}
-
-.comment-user-link:hover {
-  text-decoration: underline;
-}
-
-.comment-text {
-  margin-top: 8px;
-}
+/* Container for user photos */
+.user-photos-container {
+    max-width: 800px; /* Adjust as needed */
+    margin: 0 auto; /* Center container */
+    padding: 20px;
+  }
+  
+  /* Styles for each photo item */
+  .photo-item {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+  }
+  
+  /* Styling for the photo itself */
+  .photo-item img {
+    max-width: 100%; /* Ensure image fits container */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Remove inline spacing */
+    border-radius: 5px;
+  }
+  
+  /* Styling for photo information */
+  .photo-info {
+    margin-top: 10px;
+  }
+  
+  /* Styling for comment items */
+  .comment-item {
+    margin-top: 10px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+  }
+  
+  /* Styling for links within comments */
+  .comment-item a {
+    text-decoration: none;
+    color: #007bff; /* Blue color for links */
+  }
+  
+  /* Additional styling for typography */
+  /* You can further customize these styles based on your needs */
+  .typography {
+    /* Add your typography styles here */
+  }
+  
